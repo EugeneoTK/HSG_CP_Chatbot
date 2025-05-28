@@ -1,35 +1,62 @@
 import streamlit as st
 import json
-from sentence_transformers import SentenceTransformer, util
+import openai
+import os
 
-# Load your protocol Q&A
-with open("protocol_qa.json", "r", encoding="utf-8") as f:
-    qa_list = json.load(f)
+# Load OpenAI API key from secrets
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Embed questions using a local embedding model
-@st.cache_resource
-def load_embeddings():
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    questions = [q["question"] for q in qa_list]
-    embeddings = model.encode(questions, convert_to_tensor=True)
-    return model, embeddings, questions
+# Load the Q&A data from the JSON file
+@st.cache_data
+def load_qa_pairs():
+    with open("word_protocol_qa.json", "r") as f:
+        return json.load(f)
 
-model, embeddings, questions = load_embeddings()
+qa_pairs = load_qa_pairs()
 
-# UI
-st.title("🩺 Primary Care Protocol Chatbot")
-st.write("Ask a question and I’ll respond based only on your uploaded care protocol.")
+# Basic Streamlit setup
+st.set_page_config(page_title="Diabetes Protocol Chatbot", layout="wide")
+st.title("🩺 Diabetes Protocol Chatbot")
+st.write("Ask questions based on the care protocol. The bot will ground answers on the extracted Q&A pairs.")
 
-user_input = st.text_input("Your question")
+# Function to find the most relevant QA pair
+def find_best_match(user_question):
+    import difflib
+    questions = [item["question"] for item in qa_pairs]
+    match = difflib.get_close_matches(user_question, questions, n=1, cutoff=0.4)
+    if match:
+        for item in qa_pairs:
+            if item["question"] == match[0]:
+                return item["answer"]
+    return None
 
-if user_input:
-    # Embed the user query
-    query_embedding = model.encode(user_input, convert_to_tensor=True)
+# Function to rephrase or expand via OpenAI
+def ask_openai(question, context):
+    prompt = f"""You are a helpful assistant. Answer the question strictly based on the care protocol context.
 
-    # Semantic search
-    scores = util.pytorch_cos_sim(query_embedding, embeddings)[0]
-    top_idx = scores.argmax().item()
+Context: {context}
 
-    best_match = qa_list[top_idx]
-    st.markdown(f"**Q:** {best_match['question']}")
-    st.markdown(f"**A:** {best_match['answer']}")
+Question: {question}
+Answer:"""
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+        )
+        return response.choices[0].message["content"].strip()
+    except Exception as e:
+        return f"Error from OpenAI: {str(e)}"
+
+# Chat interface
+question = st.text_input("❓ Enter your question:")
+
+if question:
+    with st.spinner("Thinking..."):
+        matched_answer = find_best_match(question)
+        if matched_answer:
+            final_answer = ask_openai(question, matched_answer)
+            st.markdown("### 💬 Answer")
+            st.success(final_answer)
+        else:
+            st.warning("No relevant match found in the care protocol data.")
