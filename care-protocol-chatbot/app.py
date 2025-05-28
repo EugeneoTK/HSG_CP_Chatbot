@@ -1,10 +1,10 @@
 import streamlit as st
 import json
-import openai
+from openai import OpenAI
 import os
 st.set_page_config(page_title="Diabetes Protocol Chatbot", layout="wide")
 # Load OpenAI API key from secrets
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Load the Q&A data from the JSON file
 @st.cache_data
@@ -44,7 +44,7 @@ Answer:"""
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
         )
-        return response.choices[0].message["content"].strip()
+        return response.choices[0].message.content.strip()
     except Exception as e:
         return f"Error from OpenAI: {str(e)}"
 
