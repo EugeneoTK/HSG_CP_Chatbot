@@ -1,6 +1,5 @@
 import streamlit as st
 import json
-import openai
 from sentence_transformers import SentenceTransformer, util
 
 # Load your protocol Q&A
