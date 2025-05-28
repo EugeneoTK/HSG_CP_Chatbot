@@ -39,7 +39,7 @@ Context: {context}
 Question: {question}
 Answer:"""
     try:
-        response = openai.ChatCompletion.create(
+        response = client.ChatCompletion.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
