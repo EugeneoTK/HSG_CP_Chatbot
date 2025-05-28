@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import openai
 import os
-
+st.set_page_config(page_title="Diabetes Protocol Chatbot", layout="wide")
 # Load OpenAI API key from secrets
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -15,7 +15,7 @@ def load_qa_pairs():
 qa_pairs = load_qa_pairs()
 
 # Basic Streamlit setup
-st.set_page_config(page_title="Diabetes Protocol Chatbot", layout="wide")
+
 st.title("🩺 Diabetes Protocol Chatbot")
 st.write("Ask questions based on the care protocol. The bot will ground answers on the extracted Q&A pairs.")
 
