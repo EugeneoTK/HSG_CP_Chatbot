@@ -9,7 +9,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # Load the Q&A data from the JSON file
 @st.cache_data
 def load_qa_pairs():
-    with open("word_protocol_qa.json", "r") as f:
+    with open("care-protocol-chatbot/word_protocol_qa.json", "r") as f:
         return json.load(f)
 
 qa_pairs = load_qa_pairs()
