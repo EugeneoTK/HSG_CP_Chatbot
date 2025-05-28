@@ -22,9 +22,12 @@ qa_pairs = load_qa_pairs()
 
 # Define OpenAI call
 def ask_openai(question, context):
-    prompt = f"""You are a helpful assistant. Answer the question strictly based on the care protocol context below.
+    prompt = f"""You are a protocol-based assistant. Answer ONLY using the content in the care protocol below.
+If the answer is not present, say: "The protocol does not specify this information."
 
-Context:
+Do NOT use external knowledge. Do NOT guess. Be brief and precise.
+
+Protocol:
 {context}
 
 Question:
